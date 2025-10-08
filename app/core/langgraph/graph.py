@@ -55,17 +55,32 @@ class LangGraphAgent:
 
     def __init__(self):
         """Initialize the LangGraph Agent with necessary components."""
-        # Use environment-specific LLM model
-        self.llm = ChatGoogleGenerativeAI(
-            model=settings.LLM_MODEL,
-            api_key=settings.LLM_API_KEY,
-            temperature=settings.DEFAULT_LLM_TEMPERATURE,
-        ).bind_tools(tools)
+        self.model_name = settings.LLM_MODEL
+        self.llm = self._create_llm(self.model_name)
         self.tools_by_name = {tool.name: tool for tool in tools}
         self._connection_pool: Optional[AsyncConnectionPool] = None
         self._graph: Optional[CompiledStateGraph] = None
 
-        logger.info("llm_initialized", model=settings.LLM_MODEL, environment=settings.ENVIRONMENT.value)
+        logger.info("llm_initialized", model=self.model_name, environment=settings.ENVIRONMENT.value)
+
+    def _create_llm(self, model_name: str):
+        """Instantiate the chat model and bind available tools."""
+        if model_name.startswith("gpt-"):
+            llm = ChatOpenAI(
+                model=model_name,
+                temperature=settings.DEFAULT_LLM_TEMPERATURE,
+                openai_api_key=settings.LLM_API_KEY,
+                **self._get_model_kwargs(),
+            )
+        else:
+            llm = ChatGoogleGenerativeAI(
+                model=model_name,
+                api_key=settings.LLM_API_KEY,
+                temperature=settings.DEFAULT_LLM_TEMPERATURE,
+                **self._get_model_kwargs(),
+            )
+
+        return llm.bind_tools(tools)
 
     def _get_model_kwargs(self) -> Dict[str, Any]:
         """Get environment-specific model kwargs.
@@ -143,13 +158,13 @@ class LangGraphAgent:
 
         for attempt in range(max_retries):
             try:
-                with llm_inference_duration_seconds.labels(model=self.llm.model_name).time():
+                with llm_inference_duration_seconds.labels(model=self.model_name).time():
                     generated_state = {"messages": [await self.llm.ainvoke(dump_messages(messages))]}
                 logger.info(
                     "llm_response_generated",
                     session_id=state.session_id,
                     llm_calls_num=llm_calls_num + 1,
-                    model=settings.LLM_MODEL,
+                    model=self.model_name,
                     environment=settings.ENVIRONMENT.value,
                 )
                 return generated_state
@@ -170,7 +185,8 @@ class LangGraphAgent:
                     logger.warning(
                         "using_fallback_model", model=fallback_model, environment=settings.ENVIRONMENT.value
                     )
-                    self.llm.model_name = fallback_model
+                    self.model_name = fallback_model
+                    self.llm = self._create_llm(self.model_name)
 
                 continue
 

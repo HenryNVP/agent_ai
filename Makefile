@@ -2,7 +2,7 @@ install:
 	pip install uv
 	uv sync
 
-DOCKER_COMPOSE ?= docker-compose
+DOCKER_COMPOSE ?= $(shell if command -v docker-compose >/dev/null 2>&1; then echo docker-compose; else echo docker compose; fi)
 
 set-env:
 	@if [ -z "$(ENV)" ]; then \
@@ -26,7 +26,22 @@ staging:
 
 dev:
 	@echo "Starting server in development environment"
-	@bash -c "source scripts/set_env.sh development && uv run uvicorn app.main:app --reload --port 8000"
+	@bash -c 'set -euo pipefail; \
+		source scripts/set_env.sh development; \
+		UV_BIN=$$(command -v uv 2>/dev/null || true); \
+		if [ -n "$$UV_BIN" ] && [ "$${UV_BIN#/snap/}" = "$$UV_BIN" ]; then \
+			echo "Using uv binary at $$UV_BIN"; \
+			"$$UV_BIN" run uvicorn app.main:app --reload --port 8000; \
+		elif [ -x ./.venv/bin/uvicorn ]; then \
+			echo "Using virtualenv uvicorn at ./.venv/bin/uvicorn"; \
+			./.venv/bin/uvicorn app.main:app --reload --port 8000; \
+		elif [ -x ./.venv/bin/python ]; then \
+			echo "Using virtualenv python at ./.venv/bin/python"; \
+			./.venv/bin/python -m uvicorn app.main:app --reload --port 8000; \
+		else \
+			echo "Falling back to system python interpreter"; \
+			python -m uvicorn app.main:app --reload --port 8000; \
+		fi'
 
 # Evaluation commands
 eval:
