@@ -44,6 +44,7 @@ from app.utils import (
     prepare_messages,
 )
 
+from langchain_google_genai import ChatGoogleGenerativeAI
 
 class LangGraphAgent:
     """Manages the LangGraph Agent/workflow and interactions with the LLM.
@@ -55,12 +56,10 @@ class LangGraphAgent:
     def __init__(self):
         """Initialize the LangGraph Agent with necessary components."""
         # Use environment-specific LLM model
-        self.llm = ChatOpenAI(
+        self.llm = ChatGoogleGenerativeAI(
             model=settings.LLM_MODEL,
-            temperature=settings.DEFAULT_LLM_TEMPERATURE,
             api_key=settings.LLM_API_KEY,
-            max_tokens=settings.MAX_TOKENS,
-            **self._get_model_kwargs(),
+            temperature=settings.DEFAULT_LLM_TEMPERATURE,
         ).bind_tools(tools)
         self.tools_by_name = {tool.name: tool for tool in tools}
         self._connection_pool: Optional[AsyncConnectionPool] = None

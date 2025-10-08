@@ -34,6 +34,8 @@ dependencies = [
     "tqdm>=4.67.1",
     "colorama>=0.4.6",
     "ddgs>=9.6.0",
+    "google-generativeai",
+    "langchain-google-genai>=2.0.10",
 ]
 
 [project.optional-dependencies]
