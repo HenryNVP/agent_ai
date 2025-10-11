@@ -198,6 +198,22 @@ class DatabaseService:
             sessions = session.exec(statement).all()
             return sessions
 
+    async def get_or_create_guest_user(self) -> User:
+        """Ensure a guest user record exists and return it."""
+        guest_email = "guest@system.local"
+        with Session(self.engine) as session:
+            user = session.exec(select(User).where(User.email == guest_email)).first()
+            if user:
+                return user
+
+            guest_password = User.hash_password("guest-access")
+            user = User(email=guest_email, hashed_password=guest_password)
+            session.add(user)
+            session.commit()
+            session.refresh(user)
+            logger.info("guest_user_created", email=guest_email)
+            return user
+
     async def update_session_name(self, session_id: str, name: str) -> ChatSession:
         """Update a session's name.
 

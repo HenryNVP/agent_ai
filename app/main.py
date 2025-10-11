@@ -28,6 +28,7 @@ from app.core.logging import logger
 from app.core.metrics import setup_metrics
 from app.core.middleware import MetricsMiddleware
 from app.services.database import database_service
+from app.web.router import router as ui_router
 
 # Load environment variables
 load_dotenv()
@@ -115,6 +116,7 @@ app.add_middleware(
 
 # Include API router
 app.include_router(api_router, prefix=settings.API_V1_STR)
+app.include_router(ui_router)
 
 
 @app.get("/")

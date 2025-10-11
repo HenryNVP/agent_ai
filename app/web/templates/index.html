@@ -1,0 +1,677 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>{{ project_name }} · Mock Agent UI</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <style>
+    :root {
+      color-scheme: light dark;
+      font-family: "Inter", "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      background-color: #101418;
+      color: #f2f4f7;
+    }
+    body {
+      margin: 0;
+      padding: 0 1rem 2rem;
+      display: flex;
+      flex-direction: column;
+      gap: 1.5rem;
+      background: radial-gradient(circle at top, rgba(34,139,230,0.12), transparent 55%);
+      min-height: 100vh;
+    }
+    header {
+      text-align: center;
+      padding: 1.5rem 0 0.5rem;
+    }
+    header h1 {
+      margin: 0;
+      font-size: clamp(1.5rem, 4vw, 2.25rem);
+      letter-spacing: 0.03em;
+    }
+    header p {
+      margin: 0.35rem 0 0;
+      color: #c6ced9;
+    }
+    main {
+      display: grid;
+      gap: 1.5rem;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    }
+    section {
+      border-radius: 1rem;
+      padding: 1.1rem 1.25rem;
+      background: rgba(17, 22, 29, 0.78);
+      box-shadow: inset 0 0 0 1px rgba(102, 170, 255, 0.12), 0 18px 32px rgba(3, 12, 32, 0.45);
+      backdrop-filter: blur(14px);
+    }
+    section h2 {
+      margin: 0 0 0.75rem;
+      font-size: 1.1rem;
+      color: #8abfff;
+      display: flex;
+      align-items: center;
+      gap: 0.35rem;
+    }
+    section h2 span {
+      font-size: 0.8rem;
+      color: #5f6b7d;
+      font-weight: 500;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+    form, .form-group {
+      display: flex;
+      flex-direction: column;
+      gap: 0.6rem;
+    }
+    label {
+      font-size: 0.78rem;
+      color: #9aa6bc;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+    }
+    input, textarea, select {
+      border-radius: 0.7rem;
+      border: 1px solid rgba(123, 159, 214, 0.18);
+      background: rgba(8, 12, 18, 0.72);
+      color: inherit;
+      padding: 0.65rem 0.75rem;
+      font-size: 0.95rem;
+      box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.35);
+      transition: border 0.2s ease, box-shadow 0.2s ease;
+    }
+    input:focus, textarea:focus, select:focus {
+      outline: none;
+      border-color: rgba(138, 191, 255, 0.65);
+      box-shadow: 0 0 0 2px rgba(50, 150, 250, 0.18);
+    }
+    button {
+      appearance: none;
+      border: none;
+      border-radius: 0.8rem;
+      padding: 0.6rem 0.9rem;
+      font-size: 0.95rem;
+      font-weight: 600;
+      cursor: pointer;
+      background: linear-gradient(135deg, #48a9ff, #6d5dfc);
+      color: #0c111a;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      transition: transform 0.15s ease, box-shadow 0.15s ease;
+    }
+    button:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 10px 20px rgba(52, 132, 255, 0.28);
+    }
+    button.secondary {
+      background: linear-gradient(135deg, rgba(102, 109, 255, 0.2), rgba(95, 217, 255, 0.12));
+      color: #cdd6e5;
+    }
+    .row {
+      display: flex;
+      gap: 0.5rem;
+      flex-wrap: wrap;
+    }
+    .row button {
+      flex: 1;
+      min-width: 48%;
+    }
+    #status {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 0.5rem;
+      padding: 0.8rem 1rem;
+      border-radius: 0.85rem;
+      border: 1px dashed rgba(138, 191, 255, 0.25);
+      background: rgba(10, 14, 20, 0.6);
+      font-size: 0.9rem;
+      color: #a7b3c5;
+    }
+    #status[data-type="error"] {
+      border-color: rgba(255, 102, 130, 0.35);
+      color: #ff859c;
+    }
+    #status small {
+      font-size: 0.75rem;
+      color: #576477;
+    }
+    #chat-log {
+      display: flex;
+      flex-direction: column;
+      gap: 0.75rem;
+      max-height: 420px;
+      overflow-y: auto;
+      padding-right: 0.35rem;
+    }
+    .message {
+      padding: 0.8rem 0.9rem;
+      border-radius: 0.85rem;
+      max-width: 96%;
+      box-shadow: inset 0 0 0 1px rgba(138, 191, 255, 0.12), 0 12px 20px rgba(5, 11, 24, 0.45);
+      line-height: 1.5;
+      white-space: pre-wrap;
+    }
+    .message.user {
+      align-self: flex-end;
+      background: linear-gradient(135deg, rgba(96, 202, 255, 0.25), rgba(118, 92, 255, 0.18));
+    }
+    .message.assistant {
+      align-self: flex-start;
+      background: rgba(9, 13, 22, 0.72);
+    }
+    ul.chip-list {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.45rem;
+      list-style: none;
+      padding: 0;
+      margin: 0.3rem 0 0;
+    }
+    ul.chip-list li {
+      padding: 0.35rem 0.6rem;
+      border-radius: 999px;
+      background: rgba(92, 162, 255, 0.16);
+      font-size: 0.78rem;
+      color: #acc8ff;
+    }
+    .muted {
+      color: #6e7a90;
+      font-size: 0.82rem;
+    }
+    .small {
+      font-size: 0.75rem;
+      color: #546071;
+    }
+    @media (max-width: 720px) {
+      body {
+        padding: 0.5rem 0.8rem 2rem;
+      }
+      section {
+        padding: 1rem;
+      }
+      #chat-log {
+        max-height: 320px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>{{ project_name }} · Interactive Harness</h1>
+    <p>Minimal UI for registering users, creating sessions, chatting with the LangGraph agent, and pushing documents into the RAG store.</p>
+  </header>
+
+  <div id="status" data-type="info">
+    <span>Ready. Register or log in to begin.</span>
+    <small id="state-hint">No session yet.</small>
+  </div>
+
+  <main>
+    <section id="auth-section">
+      <h2>Authentication <span>Users & Tokens</span></h2>
+      <form id="register-form">
+        <label for="register-email">Register new tester</label>
+        <input id="register-email" type="email" name="email" placeholder="tester@example.com" required>
+        <input id="register-password" type="password" name="password" placeholder="Strong password (Aa1!....)" minlength="8" required>
+        <button type="submit">Register &amp; store token</button>
+      </form>
+
+      <form id="login-form">
+        <label for="login-email">Log in existing tester</label>
+        <input id="login-email" type="email" name="username" placeholder="tester@example.com" required>
+        <input id="login-password" type="password" name="password" placeholder="Password" required>
+        <button type="submit">Log In</button>
+      </form>
+
+      <div class="form-group">
+        <label>Stored credentials</label>
+        <div class="muted">User token: <span id="user-token-preview" class="small">none</span></div>
+        <div class="row">
+          <button type="button" class="secondary" id="clear-user-token">Clear Token</button>
+          <button type="button" class="secondary" id="session-from-token">Create Session</button>
+        </div>
+      </div>
+    </section>
+
+    <section id="session-section">
+      <h2>Session <span>Chat Threads</span></h2>
+      <div class="form-group">
+        <label for="session-name">Create chat session</label>
+        <input id="session-name" type="text" placeholder="Optional session label (unused for now)">
+        <button type="button" id="create-session-btn">Create fresh session</button>
+      </div>
+
+      <div class="form-group">
+        <label>Session details</label>
+        <div class="muted">Session ID: <span id="session-id">none</span></div>
+        <div class="muted">Session token: <span id="session-token-preview" class="small">none</span></div>
+      </div>
+
+      <div class="row">
+        <button type="button" class="secondary" id="refresh-messages-btn">Fetch stored history</button>
+        <button type="button" class="secondary" id="clear-history-btn">Clear history</button>
+      </div>
+
+      <div class="form-group">
+        <label>Known RAG file IDs</label>
+        <ul id="file-id-list" class="chip-list"></ul>
+        <button type="button" class="secondary" id="refresh-file-ids">Refresh IDs</button>
+      </div>
+    </section>
+
+    <section id="chat-section">
+      <h2>Chat <span>LangGraph Agent</span></h2>
+      <div id="chat-log">
+        <div class="muted">Send a message to load responses.</div>
+      </div>
+      <form id="chat-form">
+        <label for="chat-input">Ask the assistant</label>
+        <textarea id="chat-input" rows="3" placeholder="What insight can you pull from the strategic docs?" required></textarea>
+        <button type="submit">Send message</button>
+      </form>
+    </section>
+
+    <section id="documents-section">
+      <h2>Knowledge Base <span>RAG Upload</span></h2>
+      <form id="upload-form" enctype="multipart/form-data">
+        <label for="file-id">File identifier</label>
+        <input id="file-id" name="file_id" type="text" placeholder="strategic_docs" value="{{ default_file_id }}">
+        <label for="entity-id">Entity ID (optional)</label>
+        <input id="entity-id" name="entity_id" type="text" placeholder="Leave blank to reuse defaults">
+        <label for="rag-file">Upload document</label>
+        <input id="rag-file" name="file" type="file" accept=".pdf,.txt,.md,.docx,.pptx,.csv,.json,.html" required>
+        <button type="submit">Upload &amp; index</button>
+      </form>
+
+      <div class="form-group">
+        <label for="preview-id">Preview indexed chunks</label>
+        <input id="preview-id" type="text" placeholder="strategic_docs or other file_id">
+        <button type="button" class="secondary" id="preview-btn">Fetch preview</button>
+        <pre id="preview-output" class="small" style="white-space:pre-wrap;"></pre>
+      </div>
+    </section>
+  </main>
+
+  <script>
+    const baseApi = "/api/v1";
+    const defaultFileId = {{ default_file_id | tojson }};
+
+    const statusEl = document.getElementById("status");
+    const hintEl = document.getElementById("state-hint");
+    const userTokenPreview = document.getElementById("user-token-preview");
+    const sessionIdEl = document.getElementById("session-id");
+    const sessionTokenPreview = document.getElementById("session-token-preview");
+    const chatLog = document.getElementById("chat-log");
+    const fileIdList = document.getElementById("file-id-list");
+    const previewOutput = document.getElementById("preview-output");
+
+    const registerForm = document.getElementById("register-form");
+    const loginForm = document.getElementById("login-form");
+    const chatForm = document.getElementById("chat-form");
+    const uploadForm = document.getElementById("upload-form");
+
+    const createSessionBtn = document.getElementById("create-session-btn");
+    const refreshMessagesBtn = document.getElementById("refresh-messages-btn");
+    const clearHistoryBtn = document.getElementById("clear-history-btn");
+    const clearUserTokenBtn = document.getElementById("clear-user-token");
+    const sessionFromTokenBtn = document.getElementById("session-from-token");
+    const refreshFileIdsBtn = document.getElementById("refresh-file-ids");
+    const previewBtn = document.getElementById("preview-btn");
+
+    const sessionNameInput = document.getElementById("session-name");
+    const chatInput = document.getElementById("chat-input");
+    const fileIdInput = document.getElementById("file-id");
+    const previewInput = document.getElementById("preview-id");
+
+    let userToken = localStorage.getItem("agentUserToken") || "";
+    let sessionToken = localStorage.getItem("agentSessionToken") || "";
+    let sessionId = localStorage.getItem("agentSessionId") || "";
+    let chatHistory = [];
+
+    function setStatus(message, type = "info") {
+      statusEl.dataset.type = type;
+      statusEl.querySelector("span").textContent = message;
+    }
+
+    function setHint(message) {
+      hintEl.textContent = message;
+    }
+
+    function renderTokenPreview() {
+      userTokenPreview.textContent = userToken ? `${userToken.slice(0, 12)}…` : "none";
+      sessionIdEl.textContent = sessionId || "none";
+      sessionTokenPreview.textContent = sessionToken ? `${sessionToken.slice(0, 12)}…` : "none";
+    }
+
+    function storeUserToken(token) {
+      userToken = token;
+      if (token) {
+        localStorage.setItem("agentUserToken", token);
+      } else {
+        localStorage.removeItem("agentUserToken");
+      }
+      renderTokenPreview();
+    }
+
+    function storeSession(token, id) {
+      sessionToken = token || "";
+      sessionId = id || "";
+      if (sessionToken) {
+        localStorage.setItem("agentSessionToken", sessionToken);
+      } else {
+        localStorage.removeItem("agentSessionToken");
+      }
+      if (sessionId) {
+        localStorage.setItem("agentSessionId", sessionId);
+      } else {
+        localStorage.removeItem("agentSessionId");
+      }
+      renderTokenPreview();
+    }
+
+    async function apiFetch(path, options = {}, tokenKind = "user") {
+      const opts = {
+        method: options.method || "GET",
+        headers: options.headers ? {...options.headers} : {},
+        body: options.body ?? null,
+      };
+
+      const token = tokenKind === "session" ? sessionToken : userToken;
+      if (token && !(opts.body instanceof FormData)) {
+        opts.headers["Authorization"] = `Bearer ${token}`;
+      } else if (token && opts.body instanceof FormData) {
+        opts.headers["Authorization"] = `Bearer ${token}`;
+      }
+
+      if (opts.body && !(opts.body instanceof FormData) && !("Content-Type" in opts.headers)) {
+        opts.headers["Content-Type"] = "application/json";
+      }
+
+      const res = await fetch(`${baseApi}${path}`, opts);
+      const text = await res.text();
+      let payload;
+
+      try {
+        payload = text ? JSON.parse(text) : null;
+      } catch (_) {
+        payload = text;
+      }
+
+      if (!res.ok) {
+        const detail = payload?.detail || res.statusText || "Request failed";
+        throw new Error(Array.isArray(detail) ? detail.join(", ") : detail);
+      }
+
+      return payload;
+    }
+
+    function renderChat() {
+      chatLog.innerHTML = "";
+      if (!chatHistory.length) {
+        const empty = document.createElement("div");
+        empty.className = "muted";
+        empty.textContent = "No exchanges yet. Send a message to start chatting.";
+        chatLog.appendChild(empty);
+        return;
+      }
+
+      for (const msg of chatHistory) {
+        const bubble = document.createElement("div");
+        bubble.className = `message ${msg.role}`;
+        bubble.textContent = msg.content;
+        chatLog.appendChild(bubble);
+      }
+      chatLog.scrollTop = chatLog.scrollHeight;
+    }
+
+    function renderFileIds(ids = []) {
+      fileIdList.innerHTML = "";
+      if (!ids.length) {
+        const li = document.createElement("li");
+        li.textContent = "No documents indexed yet";
+        fileIdList.appendChild(li);
+        return;
+      }
+      ids.forEach((id) => {
+        const li = document.createElement("li");
+        li.textContent = id;
+        fileIdList.appendChild(li);
+      });
+    }
+
+    async function registerUser(event) {
+      event.preventDefault();
+      const email = document.getElementById("register-email").value.trim();
+      const password = document.getElementById("register-password").value;
+      try {
+        setStatus("Registering tester…");
+        const res = await fetch(`${baseApi}/auth/register`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ email, password }),
+        });
+        const data = await res.json();
+        if (!res.ok) {
+          throw new Error(data?.detail || "Unable to register");
+        }
+        storeUserToken(data.token?.access_token || "");
+        setStatus("Tester registered successfully. You can now create sessions.", "info");
+        setHint("No session yet.");
+      } catch (err) {
+        setStatus(`Registration failed: ${err.message}`, "error");
+      }
+    }
+
+    async function loginUser(event) {
+      event.preventDefault();
+      const formData = new FormData(loginForm);
+      try {
+        setStatus("Logging in…");
+        const res = await fetch(`${baseApi}/auth/login`, {
+          method: "POST",
+          body: formData,
+        });
+        const data = await res.json();
+        if (!res.ok) {
+          throw new Error(data?.detail || "Login failed");
+        }
+        storeUserToken(data.access_token || "");
+        setStatus("Login successful. Create a session to chat.", "info");
+        setHint("No session yet.");
+      } catch (err) {
+        setStatus(`Login failed: ${err.message}`, "error");
+      }
+    }
+
+    async function createSession() {
+      if (!userToken) {
+        setStatus("Log in or register before starting a session.", "error");
+        return;
+      }
+      try {
+        setStatus("Creating session…");
+        const res = await apiFetch("/auth/session", {
+          method: "POST",
+        }, "user");
+        storeSession(res.token?.access_token || "", res.session_id || "");
+        chatHistory = [];
+        renderChat();
+        setStatus("Session ready. Start chatting!", "info");
+        setHint(`Session ${sessionId.slice(0, 8)}…`);
+      } catch (err) {
+        setStatus(`Unable to create session: ${err.message}`, "error");
+      }
+    }
+
+    async function loadMessages() {
+      if (!sessionToken) {
+        setStatus("Create a session first.", "error");
+        return;
+      }
+      try {
+        const res = await apiFetch("/chatbot/messages", {}, "session");
+        chatHistory = res.messages || [];
+        renderChat();
+        if (chatHistory.length) {
+          setStatus("Loaded stored chat history.", "info");
+        } else {
+          setStatus("No messages stored for this session.", "info");
+        }
+      } catch (err) {
+        setStatus(`Failed to load messages: ${err.message}`, "error");
+      }
+    }
+
+    async function clearHistory() {
+      if (!sessionToken) {
+        setStatus("Create a session first.", "error");
+        return;
+      }
+      try {
+        await apiFetch("/chatbot/messages", { method: "DELETE" }, "session");
+        chatHistory = [];
+        renderChat();
+        setStatus("History cleared for this session.", "info");
+      } catch (err) {
+        setStatus(`Failed to clear history: ${err.message}`, "error");
+      }
+    }
+
+    async function sendChat(event) {
+      event.preventDefault();
+      if (!sessionToken) {
+        setStatus("Create a session before chatting.", "error");
+        return;
+      }
+      const content = chatInput.value.trim();
+      if (!content) {
+        return;
+      }
+      chatInput.value = "";
+      chatHistory = [...chatHistory, { role: "user", content }];
+      renderChat();
+
+      try {
+        setStatus("Waiting for assistant…");
+        const res = await apiFetch("/chatbot/chat", {
+          method: "POST",
+          body: JSON.stringify({ messages: chatHistory }),
+        }, "session");
+        chatHistory = res.messages || [];
+        renderChat();
+        setStatus("Assistant responded.", "info");
+      } catch (err) {
+        setStatus(`Chat failed: ${err.message}`, "error");
+      }
+    }
+
+    async function uploadDocument(event) {
+      event.preventDefault();
+      if (!userToken) {
+        setStatus("Log in before uploading documents.", "error");
+        return;
+      }
+      const formData = new FormData(uploadForm);
+      if (!formData.get("file_id")) {
+        formData.set("file_id", defaultFileId || "strategic_docs");
+      }
+      try {
+        setStatus("Uploading document to RAG…");
+        const res = await apiFetch("/documents/upload", {
+          method: "POST",
+          body: formData,
+        }, "user");
+        setStatus(`Upload complete. Indexed as ${res.file_id}.`, "info");
+        await refreshFileIds();
+      } catch (err) {
+        setStatus(`Upload failed: ${err.message}`, "error");
+      } finally {
+        uploadForm.reset();
+        if (defaultFileId) {
+          fileIdInput.value = defaultFileId;
+        }
+      }
+    }
+
+    async function refreshFileIds() {
+      if (!userToken) {
+        setStatus("Log in to fetch document IDs.", "error");
+        return;
+      }
+      try {
+        const res = await apiFetch("/documents/ids", {}, "user");
+        renderFileIds(res.ids || []);
+        setStatus("Refreshed document identifiers.", "info");
+      } catch (err) {
+        setStatus(`Could not load document IDs: ${err.message}`, "error");
+      }
+    }
+
+    async function previewDocument() {
+      if (!userToken) {
+        setStatus("Log in to preview documents.", "error");
+        return;
+      }
+      const fileId = previewInput.value.trim() || defaultFileId;
+      if (!fileId) {
+        setStatus("Provide a file_id first.", "error");
+        return;
+      }
+      try {
+        const res = await apiFetch(`/documents/${encodeURIComponent(fileId)}/preview`, {}, "user");
+        previewOutput.textContent = JSON.stringify(res.chunks, null, 2);
+        setStatus(`Preview fetched for ${res.file_id}.`, "info");
+      } catch (err) {
+        setStatus(`Preview failed: ${err.message}`, "error");
+      }
+    }
+
+    function clearStoredUserToken() {
+      storeUserToken("");
+      storeSession("", "");
+      chatHistory = [];
+      renderChat();
+      fileIdList.innerHTML = "";
+      previewOutput.textContent = "";
+      setStatus("Cleared stored credentials.", "info");
+      setHint("No session yet.");
+    }
+
+    function restoreDefaults() {
+      renderTokenPreview();
+      if (userToken) {
+        setStatus("User token restored from storage. Create a fresh session or reuse the current one.", "info");
+        setHint(sessionId ? `Session ${sessionId.slice(0, 8)}…` : "No active session cached.");
+      }
+      if (defaultFileId && !fileIdInput.value) {
+        fileIdInput.value = defaultFileId;
+      }
+      if (sessionToken && sessionId) {
+        setStatus("Session token restored. You can resume chatting or refresh history.", "info");
+      }
+      renderChat();
+    }
+
+    registerForm.addEventListener("submit", registerUser);
+    loginForm.addEventListener("submit", loginUser);
+    chatForm.addEventListener("submit", sendChat);
+    uploadForm.addEventListener("submit", uploadDocument);
+
+    createSessionBtn.addEventListener("click", createSession);
+    refreshMessagesBtn.addEventListener("click", loadMessages);
+    clearHistoryBtn.addEventListener("click", clearHistory);
+    clearUserTokenBtn.addEventListener("click", clearStoredUserToken);
+    sessionFromTokenBtn.addEventListener("click", createSession);
+    refreshFileIdsBtn.addEventListener("click", refreshFileIds);
+    previewBtn.addEventListener("click", previewDocument);
+
+    restoreDefaults();
+    renderFileIds([]);
+    if (sessionToken && sessionId) {
+      loadMessages();
+    }
+  </script>
+</body>
+</html>

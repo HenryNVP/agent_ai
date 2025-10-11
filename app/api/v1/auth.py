@@ -5,7 +5,7 @@ and token verification.
 """
 
 import uuid
-from typing import List
+from typing import List, Optional
 
 from fastapi import (
     APIRouter,
@@ -43,6 +43,7 @@ from app.utils.sanitization import (
 
 router = APIRouter()
 security = HTTPBearer()
+optional_security = HTTPBearer(auto_error=False)
 db_service = DatabaseService()
 
 
@@ -228,16 +229,24 @@ async def login(
 
 
 @router.post("/session", response_model=SessionResponse)
-async def create_session(user: User = Depends(get_current_user)):
+async def create_session(credentials: Optional[HTTPAuthorizationCredentials] = Depends(optional_security)):
     """Create a new chat session for the authenticated user.
 
     Args:
-        user: The authenticated user
+        credentials: Optional bearer token for an authenticated user
 
     Returns:
         SessionResponse: The session ID, name, and access token
     """
     try:
+        user: Optional[User] = None
+
+        if credentials:
+            user = await get_current_user(credentials)
+
+        if user is None:
+            user = await db_service.get_or_create_guest_user()
+
         # Generate a unique session ID
         session_id = str(uuid.uuid4())
 

@@ -69,6 +69,18 @@ cp .env.example .env.[development|staging|production] # e.g. .env.development
 
 4. Update the `.env` file with your configuration (see `.env.example` for reference)
 
+### RAG Integration
+
+The agent now queries the RAG API through the `rag_search` LangGraph tool. Configure these settings in your `.env` file:
+
+- `RAG_BASE_URL`: Base URL for the RAG service (e.g. `http://localhost:8010` locally, `http://rag_api:8000` in Docker).
+- `RAG_DEFAULT_FILE_IDS`: Comma-separated list of file IDs the tool should search by default.
+- `RAG_TOP_K`: Maximum number of passages to fetch per call.
+- `RAG_ENTITY_ID`: Optional entity identifier if your RAG deployment uses multi-tenant access control.
+- `RAG_JWT_SECRET` / `RAG_JWT_ALGORITHM` / `RAG_JWT_TTL_SECONDS`: Shared secret and settings used to mint the bearer token expected by the RAG API. Align the secret with `services/rag_api/.env`.
+
+If no `file_ids` are supplied at runtime and no defaults are configured, the tool will return an explanatory message instead of making a request.
+
 ### Database setup
 
 1. Create a PostgreSQL database (e.g Supabase or local PostgreSQL)
@@ -105,6 +117,21 @@ make [dev|staging|production] # e.g. make dev
 ```bash
 http://localhost:8000/docs
 ```
+
+### Mock Testing UI
+
+Need a quick way to exercise the LangGraph agent and RAG integration without standing up a full frontend? Launch the app and open:
+
+```
+http://localhost:8000/ui
+```
+
+The page lets you:
+
+- register or log in a test user (credentials are stored locally in your browser)
+- mint a new chat session and exchange messages with the agent
+- upload documents into the RAG knowledge base via the `/documents/upload` proxy
+- list known `file_id` values and preview the indexed chunks for sanity checks
 
 #### Using Docker
 

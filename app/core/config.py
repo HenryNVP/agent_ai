@@ -154,6 +154,19 @@ class Settings:
         self.MAX_TOKENS = int(os.getenv("MAX_TOKENS", "2000"))
         self.MAX_LLM_CALL_RETRIES = int(os.getenv("MAX_LLM_CALL_RETRIES", "3"))
 
+        # RAG Service Configuration
+        self.RAG_BASE_URL = os.getenv("RAG_BASE_URL", "http://localhost:8010")
+        self.RAG_QUERY_ENDPOINT = os.getenv("RAG_QUERY_ENDPOINT", "/query")
+        self.RAG_QUERY_MULTIPLE_ENDPOINT = os.getenv("RAG_QUERY_MULTIPLE_ENDPOINT", "/query_multiple")
+        self.RAG_DEFAULT_FILE_IDS = parse_list_from_env("RAG_DEFAULT_FILE_IDS", [])
+        self.RAG_TOP_K = int(os.getenv("RAG_TOP_K", "4"))
+        self.RAG_ENTITY_ID = os.getenv("RAG_ENTITY_ID")
+        self.RAG_TIMEOUT_SECONDS = float(os.getenv("RAG_TIMEOUT_SECONDS", "10"))
+        self.RAG_JWT_SECRET = os.getenv("RAG_JWT_SECRET", "")
+        self.RAG_JWT_ALGORITHM = os.getenv("RAG_JWT_ALGORITHM", "HS256")
+        self.RAG_JWT_TTL_SECONDS = int(os.getenv("RAG_JWT_TTL_SECONDS", "60"))
+        self.RAG_SERVICE_SUBJECT = os.getenv("RAG_SERVICE_SUBJECT", self.PROJECT_NAME)
+
         # JWT Configuration
         self.JWT_SECRET_KEY = os.getenv("JWT_SECRET_KEY", "")
         self.JWT_ALGORITHM = os.getenv("JWT_ALGORITHM", "HS256")
